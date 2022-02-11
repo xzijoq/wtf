@@ -3,7 +3,7 @@ import subprocess
 import sys
 import argparse
 import shutil
-
+#temp https://youtu.be/ws2uptjZwmA
 #from os import path
 from os.path import join
 from os.path import isdir
@@ -17,7 +17,8 @@ target = 't1'
 target_path = join(build_dir_path, target)
 
 cmake_compiler = 'clang++'
-cmake_build_type = 'Relese'
+cmake_build_type = 'Debug'
+#'Relese'
 cmake_generator = 'Ninja'
 
 conan_dir = 'conan'
@@ -61,7 +62,7 @@ def cmake_build():
 
     
     if isfile(target_path):
-        p_msg(b)
+        #p_msg(b)
         if isfile(join(build_dir_path, 'compile_commands.json')):
             if isfile(join(cwd, 'compile_commands.json')):
                 os.remove(join(cwd, 'compile_commands.json'))

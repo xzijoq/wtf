@@ -1,15 +1,13 @@
+#include <style.h>
 
-#include <cstdio>
-#include <fmt/color.h>
 
 #include <iostream>
 
 
+using fmt::print;
+int main(){
 
-int main(int, char**)
-{
- 
+    print(okStyle, "\nfuck me \n");
 
-
-   return 12;
+    return 0;
 }
