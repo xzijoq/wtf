@@ -13,11 +13,12 @@ cwd = os.getcwd()
 build_dir = 'build'
 build_dir_path = join(cwd, build_dir)
 
-target = 't1'
+target = 'client'
 target_path = join(build_dir_path, target)
 
 cmake_compiler = 'clang++'
 cmake_build_type = 'Debug'
+#'Debug'
 #'Relese'
 cmake_generator = 'Ninja'
 
@@ -28,13 +29,18 @@ conan_profile = 'clang'
 conan_profile_path = join(conan_dir_path, conan_profile)
 
 parser = argparse.ArgumentParser()
-parser.add_argument('what', help="wow")
-parser.add_argument('-a1','--a1', help="first argument", default="")
+parser.add_argument('what', help="wow", default="b")
+parser.add_argument('-t', help="target to run", default="")
+parser.add_argument('-a1', '--a1', help="first argument", default="")
 parser.add_argument('-a2', help="second argument", default="")
 parser.add_argument('-a3', help="third argument", default="")
 parser.add_argument('-a4', help="fourth argument", default="")
 args = parser.parse_args()
 what = args.what
+
+if args.t != "":
+    target = args.t
+    target_path = join(build_dir_path, target)
 
 
 def p_msg(skk):
@@ -54,13 +60,13 @@ def cmake_build():
     if not os.path.isdir(build_dir):
         p_err("Build Directory not found")
         return
+
     if os.path.isfile(target_path):
         p_msg(f"Deleting Target: {target}")
         os.remove(target_path)
 
     subprocess.run([f'cmake --build {build_dir} -j8 '], shell=True)
 
-    
     if isfile(target_path):
         #p_msg(b)
         if isfile(join(build_dir_path, 'compile_commands.json')):
@@ -81,6 +87,8 @@ def cmake_build():
         print("\n")
         p_msg("End")
     pass
+
+
 def cmake_run():
     if not isfile(join(cwd, 'CMakeLists.txt')):
         p_err("CMakeLists.txt not found")
@@ -97,9 +105,11 @@ def cmake_run():
 
     if not (isdir(build_dir_path) and ero.returncode == 0):
         p_err("cmake_build() failed")
-        return 
+        return
     cmake_build()
     pass
+
+
 def conan_run():
     if (isdir(conan_dir_path)):
         if isfile(conan_profile_path):
@@ -112,6 +122,7 @@ def conan_run():
             p_wrn(f'Profile not found: {conan_profile}')
     else:
         p_wrn(f"Conan Directory Not Found: {conan_dir_path}")
+
 
 if (what == 'r' or what == 'run'):
     if not (isdir(join(cwd, conan_target))):
