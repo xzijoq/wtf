@@ -1,7 +1,7 @@
 #include <cstdint>
 #define ASIO_NO_DEPRECATED
 
-#pragma region includes
+
 
 #include <asio.hpp>
 #include <asio/error_code.hpp>
@@ -16,7 +16,6 @@
 #include "main.h"
 #include "style.h"
 
-#pragma endregion
 
 #pragma region using
 using fmt::print;
@@ -34,50 +33,59 @@ int main()
 {
     print( liStyle, "\nSERVER STARTS HERE\n" );
 
-    uint16_t           sport    = 1330;
-    ip::address        ip4any   = ip::address_v4::any();
-    auto               protocol = ip::tcp::v4();
-    constexpr uint16_t qSize{ 12 };
-    tcp::endpoint      sep{ ip4any, sport };
-
-    io_context ioc;
     error_code ec;
-    int        counter{ 0 };
+    io_context ioc;
 
+    //! LocalConfig
+    auto     IPany      = ip::address_v4::any();
+    uint16_t ServerPort = 1338;
+
+    tcp::endpoint ServerEndpoint{ IPany, ServerPort };
+    auto          Protocol = tcp::v4();
+
+    //! Buffers
+    constexpr int BackLog   = 12;
+    const string  OutString = "Fuck You Too !!";
+    string        InString  = "                      ";
+    auto          OutBuf    = buffer( OutString, sizeof( OutString ) );
+    auto          InBuf     = buffer( InString, sizeof( InString ) );
+
+    //! Accepter Socket
     tcp::acceptor acp( ioc );
-    acp.open( protocol, ec );
+
+    acp.open( Protocol, ec );
     checkec( ec, where );
-    acp.set_option( asio::ip::tcp::acceptor::reuse_address( true ) );
-    acp.bind( sep, ec );
+
+    acp.set_option( socket_base::reuse_address( true ), ec );
     checkec( ec, where );
+
+    acp.bind( ServerEndpoint, ec );
+    checkec( ec, where );
+
     while ( true )
     {
-        acp.listen( qSize, ec );
+        print( liStyle, "\nListening: " );
+        cout<<endl;
+        acp.listen( BackLog, ec );
         checkec( ec, where );
 
         tcp::socket soc( ioc );
         acp.accept( soc, ec );
         checkec( ec, where );
-        auto a = soc.local_endpoint();
-        print( okStyle, "\nlocalip: {},localport: {}", a.address().to_string(),
-               a.port() );
-        auto b = soc.remote_endpoint();
-        print( okStyle, "\nremotelip: {},remoteport: {} counter: {}",
-               b.address().to_string(), b.port(), ++counter );
 
-        string rbuf = "                             ";
-        auto   rb   = buffer( rbuf, sizeof( rbuf ) );
-        int    lol  = soc.read_some( rb, ec );
+        print( okStyle, "\nClient Address: {} Port: {} ",
+               soc.remote_endpoint().address().to_string(),
+               soc.remote_endpoint().port());
+
+        auto inb = soc.read_some( InBuf, ec );
         checkec( ec, where );
 
-        auto wb = buffer( "FuckYouToo" + std::to_string( counter ), 12 );
-        soc.send( wb, 12, ec );
+        auto oub = soc.write_some( OutBuf, ec );
         checkec( ec, where );
-        // std::this_thread::sleep_for( 1s );
 
-        print( orStyle, "\n{}", rbuf );
+        print( yeStyle, "\nClient Says: {}", InString );
     }
-    print( "s" );
+
     print( liStyle, "\nSERVER ENDS HERE\n" );
     return 0;
 }

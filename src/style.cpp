@@ -13,7 +13,7 @@ fmt::text_style fwStyle = fg( fmt::color::floral_white ) | fmt::emphasis::bold;
 
 fmt::text_style orStyle = fg( fmt::color::dark_orange ) | fmt::emphasis::bold;
 
-fmt::text_style grStyle = fg( fmt::color::azure ) | fmt::emphasis::bold;
+fmt::text_style grStyle = fg( fmt::color::azure ) | fmt::emphasis::bold ;
 fmt::text_style yeStyle = fg( fmt::color::yellow ) | fmt::emphasis::bold;
 fmt::text_style liStyle = fg( fmt::color::lime ) | fmt::emphasis::bold;
 

@@ -2,11 +2,10 @@
 #include <defs.h>
 #include <style.h>
 
-
 using std::cout;
 using std::endl;
 
-void checkec( std::error_code ec1, std::string fname, int lno , std::string sw )
+void checkec( std::error_code ec1, std::string fname, int lno, std::string sw )
 {
     if ( ec1.value() != 0 )
     {
@@ -20,7 +19,11 @@ void checkec( std::error_code ec1, std::string fname, int lno , std::string sw )
     }
     else
     {
-        print( okStyle, "\nlineNo: {:<20}:  Errorcode: {} Message: {}", lno, ec1.value(),
-               ec1.message() );
+        if ( sw != "" )
+        {
+            print( okStyle,
+                   "\nlineNo: {} :- {:<20}:  Errorcode: {} Message: {}", lno,
+                   sw, ec1.value(), ec1.message() );
+        }
     }
 }
