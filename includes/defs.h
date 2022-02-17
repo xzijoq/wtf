@@ -7,5 +7,5 @@
     #define where __function__, __LINE__
 #endif
 
-void checkec( std::error_code ec1, std::string sw = "", std::string fname = "",
-              int lno = -1 );
+void checkec( std::error_code ec1, std::string fname = "",
+              int lno = -1 , std::string sw = "");
