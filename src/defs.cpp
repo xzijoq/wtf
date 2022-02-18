@@ -2,6 +2,7 @@
 #include <defs.h>
 #include <style.h>
 
+
 using std::cout;
 using std::endl;
 
@@ -27,3 +28,5 @@ void checkec( std::error_code ec1, std::string fname, int lno, std::string sw )
         }
     }
 }
+
+extern const std::string doom;
