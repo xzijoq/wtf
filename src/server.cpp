@@ -26,9 +26,8 @@ using asio::ip::tcp;
 using namespace std::placeholders;
 #pragma endregion
 
-
 void ReadFromSoc( tcp::socket& soc );
-int main()
+int  main()
 {
     print( liStyle, "\nSERVER STARTS HERE\n" );
 
@@ -76,11 +75,11 @@ int main()
                soc.remote_endpoint().address().to_string(),
                soc.remote_endpoint().port() );
 
-       // auto inb = soc.read_some( InBuf, ec );
-        //checkec( ec, where );
-        ReadFromSoc( soc );
+        auto inb = soc.read_some( InBuf, ec );
+        checkec( ec, where );
 
-        auto oub = soc.write_some( OutBuf, ec );
+
+        asio::write( soc, OutBuf, ec );
         checkec( ec, where );
 
         print( yeStyle, "\nClient Says: {}", InString );
@@ -88,29 +87,4 @@ int main()
 
     print( liStyle, "\nSERVER ENDS HERE\n" );
     return 0;
-}
-
-void ReadFromSoc( tcp::socket& soc )
-{
-    error_code ec;
-    string     res;
-    res.resize( 23164);
-
-    print(eStyle,":\nsize: {}",res.size());
-    cout<<endl;
-    
-
-    int dataRead{ 0 };
-    while ( dataRead < 23162 )
-    {
-        int rt{ 0 };
-        print(eStyle,":\nsssDr{}",dataRead);
-        dataRead += soc.read_some(
-            buffer( (static_cast<char*>( res.data() ) + dataRead),
-                    res.size() - dataRead ),
-            ec );
-        checkec( ec, where );
-        print(eStyle,":\nDr{}",dataRead);
-    }
-    print( yeStyle, "\nOMG: \n{}", res );
 }
