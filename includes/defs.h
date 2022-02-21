@@ -47,8 +47,9 @@ struct SessionRead
     //! can be:  static constexpr uint_fast32_t HEADERSIZE=9;
     std::shared_ptr<tcp::socket> mSoc;
     string                       InputString;
-    int                          TotalBytesRead{ 0 };
+    //int                          TotalBytesRead{ 0 };
     string                       InputHeader;
+    bool                         ReadHeader = true;
 };
 
 void WriteString( std::shared_ptr<tcp::socket> sock,

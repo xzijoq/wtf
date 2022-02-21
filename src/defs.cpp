@@ -54,8 +54,8 @@ void WriteString( std::shared_ptr<tcp::socket> sock, string const& WriteString )
     datab->mSoc              = sock;
     datab->TotalBytesWritten = 0;
 
-    auto f2 = std::bind( WriteCallBack, _1, _2, datab );
     // datab->mSoc->async_write_some( buffer( datab->OutString ), f2 );
+    auto f2 = std::bind( WriteCallBack, _1, _2, datab );
 
     asio::async_write( *( datab->mSoc ), buffer( datab->OutString ), f2 );
 }
@@ -75,7 +75,8 @@ void ReadString( std::shared_ptr<tcp::socket> soc )
     auto re = std::make_shared<SessionRead>();
     re->InputString.clear();
     re->InputString.resize( SessionRead::HEADERSIZE );
-    re->mSoc = soc;
+    re->mSoc       = soc;
+    re->ReadHeader = true;
 
     auto f1 = std::bind( ReadCallBack, _1, _2, re );
 
@@ -86,25 +87,29 @@ void ReadString( std::shared_ptr<tcp::socket> soc )
 }
 void ReadCallBack( error_code ec, int byRead, std::shared_ptr<SessionRead> rs )
 {
+    // print(wStyle,"\nwaaa");
     if ( ec.value() != 0 )
     {
         checkec( ec, where, "callbackread" );
         return;
     }
 
-    if ( rs->InputString.length() == SessionRead::HEADERSIZE )
+    if ( rs->ReadHeader == true )
     {
         int totals      = stoi( rs->InputString );
         rs->InputHeader = rs->InputString.substr( 0, SessionRead::HEADERSIZE );
         rs->InputString.clear();
 
         rs->InputString.resize( totals - SessionRead::HEADERSIZE );
+        rs->ReadHeader = false;
     }
     else
     {
-        print( grStyle, "\nSomeOne From: {}:{} says:",
-               rs->mSoc->remote_endpoint().address().to_string(),
-               rs->mSoc->remote_endpoint().port() );
+        tcp::endpoint rep = rs->mSoc->remote_endpoint( ec );
+        checkec( ec, where );
+        print( grStyle,
+               "\nSomeOne From: {}:{} says:", rep.address().to_string(),
+               rep.port() );
         print( yeStyle, "\n{}", rs->InputString );
         print( yeStyle, "\nThe Header Was: {}", rs->InputHeader );
         cout << endl;

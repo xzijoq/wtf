@@ -56,6 +56,18 @@ int main()
     acp.bind( ServerEndpoint, ec );
     checkec( ec, where );
 
+    std::thread t1(
+        [&ioc]()
+        {
+            using work_guard_type =
+                executor_work_guard<io_context::executor_type>;
+
+           // work_guard_type work_guard(io_context.get_executor());
+           work_guard_type work_guard(ioc.get_executor());
+            ioc.run();
+        
+        } );
+
     while ( true )
     {
         print( liStyle, "\nListening: " );
@@ -63,24 +75,30 @@ int main()
         acp.listen( BackLog, ec );
         checkec( ec, where );
 
-
         auto soc = std::make_shared<tcp::socket>( ioc );
-;
 
         acp.accept( *soc, ec );
+
+        // acp.async_accept( *soc,
+
+        tcp::endpoint cep = soc->remote_endpoint( ec );
+        checkec( ec, where );
         checkec( ec, where );
         print( okStyle, "\nClient Address: {} Port: {} ",
-               soc->remote_endpoint().address().to_string(),
-               soc->remote_endpoint().port() );
+               cep.address().to_string(), cep.port() );
+
+        // cout<<soc->remote_endpoint();
 
         // auto inb = soc.read_some( InBuf, ec );
         ReadString( soc );
         WriteString( soc, "yep i" );
         checkec( ec, where );
 
-        ioc.run();
-        ioc.restart();
+        //  ioc.run();
+        // ioc.restart();
     }
+
+    t1.join();
 
     print( liStyle, "\nSERVER ENDS HERE\n" );
     return 0;

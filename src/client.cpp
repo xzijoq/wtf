@@ -31,6 +31,19 @@ using asio::ip::tcp;
 using namespace std::placeholders;
 #pragma endregion
 
+bool flag = true;
+
+void wtf(std::shared_ptr<tcp::socket> soc, string const& WriteString )
+{
+    auto datab = std::make_shared<SessionWrite>();
+
+    datab->setOutString( "WriteString" );
+    datab->mSoc              = soc;
+    datab->TotalBytesWritten = 0;
+    auto f2                  = std::bind( WriteCallBack, _1, _2, datab );
+
+    asio::async_write( *( datab->mSoc ), buffer( datab->OutString ), f2 );
+}
 int main( int argc, char* argv[] )
 {
     print( orStyle, "\nCLIENT STARTS HERE\n" );
@@ -56,7 +69,7 @@ int main( int argc, char* argv[] )
     auto protocol = tcp::v4();
 
     //! socket
-    for ( auto i = 0; i < 10; i++ )
+    for ( auto i = 0; i < 11; i++ )
     {
         auto soc = std::make_shared<tcp::socket>( ioc );
 
@@ -66,7 +79,8 @@ int main( int argc, char* argv[] )
         soc->set_option( socket_base::reuse_address( true ), ec );
         checkec( ec, where );
 
-        //! remove the for loop or bind call to remove new ip assign each tikme
+        //! remove the for loop or bind call to remove new ip assign each
+
         string             ClientIPstring = "127.1.12." + std::to_string( i );
         constexpr uint16_t ClientPort     = 1336;
         tcp::endpoint ClientEndpoint{ ip::make_address( ClientIPstring, ec ),
@@ -75,15 +89,66 @@ int main( int argc, char* argv[] )
 
         soc->bind( ClientEndpoint );
         checkec( ec, where );
+        soc->async_connect(
+            ServerEndPoint,
 
-        soc->connect( ServerEndPoint );
-        checkec( ec, where );
+            [soc, i]( error_code ec )
+            {
+                auto re = std::make_shared<SessionRead>();
+                re->InputString.clear();
+                re->InputString.resize( SessionRead::HEADERSIZE );
+                re->mSoc       = soc;
+                re->ReadHeader = true;
 
-        WriteString( soc, "omg aaaaaaaaaaaa " + std::to_string( i ) );
-        ReadString( soc );
-        ioc.run();
-        ioc.restart();
-    }
+                //  auto f1 = std::bind( ReadCallBack, _1, _2, re );
+            //    ReadString( soc );
+                asio::async_read(
+                    *( re->mSoc ),
+                    buffer( static_cast<char*>( re->InputString.data() ),
+                            re->InputString.length() ),
+                    [re]( error_code ec, int bytesread )
+                    { print( yeStyle, "\n{}", re->InputString ); } );
+
+                WriteString( soc, "12345678" + std::to_string( i ) );
+              //  wtf(soc,);
+                //auto datab = std::make_shared<SessionWrite>();
+//
+                //datab->setOutString( "WriteString" );
+                //datab->mSoc              = soc;
+                //datab->TotalBytesWritten = 0;
+                //auto f2 = std::bind( WriteCallBack, _1, _2, datab );
+//
+                //asio::async_write( *( datab->mSoc ), buffer( datab->OutString ),
+                //                   f2 );
+                // asio::async_write( *( datab->mSoc ), buffer( datab->OutString
+                // ),
+                //                    [datab]( error_code ec, int byre )
+                //                    { print( yeStyle, "\nWroteSOmething" ); }
+                //                    );
+
+                // auto f2 = std::bind( WriteCallBack, _1, _2, datab );
+            }
+
+        );
+
+        // checkec( ec, where );
+        // WriteString( soc, "12345678" + std::to_string( i ) );
+        // ReadString( soc );
+        //  soc->async_connect( ServerEndPoint, std::bind( wtf, _1, soc ) );
+    }  // for end
+    std::thread t1(
+        [&ioc]()
+        {
+            while ( true )
+            {
+                ioc.run();
+                ioc.restart();
+                std::this_thread::sleep_for( 2ms );
+            }
+        }
+
+    );
+    t1.join();
 
     print( orStyle, "\nCLIENT ENDS HERE\n" );
     return 0;
