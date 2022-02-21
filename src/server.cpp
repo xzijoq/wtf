@@ -1,4 +1,4 @@
-#include <cstdint>
+
 #define ASIO_NO_DEPRECATED
 
 #include <asio.hpp>
@@ -7,6 +7,7 @@
 #include <asio/ip/tcp.hpp>
 #include <asio/registered_buffer.hpp>
 #include <chrono>
+#include <cstdint>
 #include <system_error>
 #include <thread>
 
@@ -20,14 +21,13 @@ using std::cout;
 using std::endl;
 using std::string;
 using namespace std::chrono;
-using ull = unsigned long long;
+
 using namespace asio;
 using asio::ip::tcp;
 using namespace std::placeholders;
 #pragma endregion
 
-void ReadFromSoc( tcp::socket& soc );
-int  main()
+int main()
 {
     print( liStyle, "\nSERVER STARTS HERE\n" );
 
@@ -35,18 +35,14 @@ int  main()
     io_context ioc;
 
     //! LocalConfig
-    auto     IPany      = ip::address_v4::any();
-    uint16_t ServerPort = 1338;
-
+    auto          IPany      = ip::address_v4::any();
+    uint16_t      ServerPort = 1338;
     tcp::endpoint ServerEndpoint{ IPany, ServerPort };
-    auto          Protocol = tcp::v4();
+
+    auto Protocol = tcp::v4();
 
     //! Buffers
-    constexpr int BackLog   = 12;
-    const string  OutString = "Fuck You Too !!";
-    string        InString  = "                      ";
-    auto          OutBuf    = buffer( OutString, sizeof( OutString ) );
-    auto          InBuf     = buffer( InString, sizeof( InString ) );
+    constexpr int BackLog = 12;
 
     //! Accepter Socket
     tcp::acceptor acp( ioc );
@@ -67,22 +63,23 @@ int  main()
         acp.listen( BackLog, ec );
         checkec( ec, where );
 
-        tcp::socket soc( ioc );
-        acp.accept( soc, ec );
-        checkec( ec, where );
 
+        auto soc = std::make_shared<tcp::socket>( ioc );
+;
+
+        acp.accept( *soc, ec );
+        checkec( ec, where );
         print( okStyle, "\nClient Address: {} Port: {} ",
-               soc.remote_endpoint().address().to_string(),
-               soc.remote_endpoint().port() );
+               soc->remote_endpoint().address().to_string(),
+               soc->remote_endpoint().port() );
 
-        auto inb = soc.read_some( InBuf, ec );
+        // auto inb = soc.read_some( InBuf, ec );
+        ReadString( soc );
+        WriteString( soc, "yep it just got Serious" );
         checkec( ec, where );
 
-
-        asio::write( soc, OutBuf, ec );
-        checkec( ec, where );
-
-        print( yeStyle, "\nClient Says: {}", InString );
+        ioc.run();
+        ioc.restart();
     }
 
     print( liStyle, "\nSERVER ENDS HERE\n" );
