@@ -10,7 +10,6 @@
 #include <asio/ip/address_v4.hpp>
 #include <asio/ip/address_v6.hpp>
 #include <asio/ip/basic_endpoint.hpp>
-
 #include <chrono>
 #include <cstdint>
 #include <system_error>
@@ -32,8 +31,7 @@ using asio::ip::tcp;
 using namespace std::placeholders;
 #pragma endregion
 
-
-int  main( int argc, char* argv[] )
+int main( int argc, char* argv[] )
 {
     print( orStyle, "\nCLIENT STARTS HERE\n" );
 
@@ -58,27 +56,35 @@ int  main( int argc, char* argv[] )
     auto protocol = tcp::v4();
 
     //! socket
-    auto soc = std::make_shared<tcp::socket>( ioc );
+    for ( auto i = 0; i < 10; i++ )
+    {
+        auto soc = std::make_shared<tcp::socket>( ioc );
 
-    soc->open( protocol, ec );
-    checkec( ec, where );
+        soc->open( protocol, ec );
+        checkec( ec, where );
 
-    soc->set_option( socket_base::reuse_address( true ), ec );
-    checkec( ec, where );
+        soc->set_option( socket_base::reuse_address( true ), ec );
+        checkec( ec, where );
 
-    soc->bind( ClientEndpoint );
-    checkec( ec, where );
+        //! remove the for loop or bind call to remove new ip assign each tikme
+        string             ClientIPstring = "127.1.12." + std::to_string( i );
+        constexpr uint16_t ClientPort     = 1336;
+        tcp::endpoint ClientEndpoint{ ip::make_address( ClientIPstring, ec ),
+                                      ClientPort };
+        //! end remove
 
-    soc->connect( ServerEndPoint );
-    checkec( ec, where );
+        soc->bind( ClientEndpoint );
+        checkec( ec, where );
 
-    WriteString( soc ,"are Omg BITCH");
-    ReadString(soc);
-    ioc.run();
+        soc->connect( ServerEndPoint );
+        checkec( ec, where );
 
+        WriteString( soc, "omg aaaaaaaaaaaa " + std::to_string( i ) );
+        ReadString( soc );
+        ioc.run();
+        ioc.restart();
+    }
 
     print( orStyle, "\nCLIENT ENDS HERE\n" );
     return 0;
 }
-
-

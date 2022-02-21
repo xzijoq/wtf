@@ -23,9 +23,6 @@ using asio::ip::tcp;
 using namespace std::placeholders;
 #pragma endregion
 
-
-
-
 void checkec( std::error_code ec1, std::string fname, int lno, std::string sw )
 {
     if ( ec1.value() != 0 )
@@ -51,74 +48,60 @@ void checkec( std::error_code ec1, std::string fname, int lno, std::string sw )
 
 void WriteString( std::shared_ptr<tcp::socket> sock, string const& WriteString )
 {
-    auto datab = std::make_shared<Session>();
+    auto datab = std::make_shared<SessionWrite>();
 
-    // print(okStyle,"\n {}",datab->OutString.append(
-    // datab->OutString.length()));
     datab->setOutString( WriteString );
     datab->mSoc              = sock;
     datab->TotalBytesWritten = 0;
 
     auto f2 = std::bind( WriteCallBack, _1, _2, datab );
-    datab->mSoc->async_write_some( buffer( datab->OutString ), f2 );
+    // datab->mSoc->async_write_some( buffer( datab->OutString ), f2 );
+
+    asio::async_write( *( datab->mSoc ), buffer( datab->OutString ), f2 );
 }
 
 void WriteCallBack( error_code ec, int fTotalBytesWritten,
-                    std::shared_ptr<Session> sp )
+                    std::shared_ptr<SessionWrite> sp )
 {
     if ( ec.value() != 0 )
     {
         checkec( ec, where, "callback writesome" );
         return;
     }
-
-    sp->TotalBytesWritten += fTotalBytesWritten;
-
-    if ( ( sp->TotalBytesWritten ) >= ( sp->OutString.length() ) ) { return; }
-
-    auto f1 = std::bind( WriteCallBack, _1, _2, sp );
-
-    sp->mSoc->async_write_some(
-        buffer( sp->OutString.c_str() + sp->TotalBytesWritten,
-                sp->OutString.length() - sp->TotalBytesWritten ),
-        f1 );
 }
 
 void ReadString( std::shared_ptr<tcp::socket> soc )
 {
-    auto re = std::make_shared<Session>();
+    auto re = std::make_shared<SessionRead>();
     re->InputString.clear();
-    re->InputString.resize( Session::HEADERSIZE );
+    re->InputString.resize( SessionRead::HEADERSIZE );
     re->mSoc = soc;
 
     auto f1 = std::bind( ReadCallBack, _1, _2, re );
 
-    re->mSoc->async_read_some(
-        buffer(
-            static_cast<char*>( re->InputString.data() + re->TotalBytesRead ),
-            re->InputString.length() - re->TotalBytesRead ),
-        f1 );
+    asio::async_read( *( re->mSoc ),
+                      buffer( static_cast<char*>( re->InputString.data() ),
+                              re->InputString.length() ),
+                      f1 );
 }
-
-void ReadCallBack( error_code ec, int byRead, std::shared_ptr<Session> rs )
+void ReadCallBack( error_code ec, int byRead, std::shared_ptr<SessionRead> rs )
 {
     if ( ec.value() != 0 )
     {
         checkec( ec, where, "callbackread" );
         return;
     }
-    rs->TotalBytesRead += byRead;
 
-    if ( rs->TotalBytesRead == Session::HEADERSIZE )
+    if ( rs->InputString.length() == SessionRead::HEADERSIZE )
     {
-        int totals = stoi( rs->InputString );
-        rs->InputString.resize( totals );
+        int totals      = stoi( rs->InputString );
+        rs->InputHeader = rs->InputString.substr( 0, SessionRead::HEADERSIZE );
+        rs->InputString.clear();
+
+        rs->InputString.resize( totals - SessionRead::HEADERSIZE );
     }
-    if ( rs->TotalBytesRead >= rs->InputString.size() )
+    else
     {
-        rs->InputHeader = rs->InputString.substr( 0, Session::HEADERSIZE );
-        rs->InputString.erase( 0, Session::HEADERSIZE );
-
         print( grStyle, "\nSomeOne From: {}:{} says:",
                rs->mSoc->remote_endpoint().address().to_string(),
                rs->mSoc->remote_endpoint().port() );
@@ -129,9 +112,8 @@ void ReadCallBack( error_code ec, int byRead, std::shared_ptr<Session> rs )
     }
     auto f1 = std::bind( ReadCallBack, _1, _2, rs );
 
-    rs->mSoc->async_read_some(
-        buffer(
-            static_cast<char*>( rs->InputString.data() + rs->TotalBytesRead ),
-            rs->InputString.length() - rs->TotalBytesRead ),
-        f1 );
+    asio::async_read( *( rs->mSoc ),
+                      buffer( static_cast<char*>( rs->InputString.data() ),
+                              rs->InputString.length() ),
+                      f1 );
 }

@@ -75,7 +75,7 @@ int main()
 
         // auto inb = soc.read_some( InBuf, ec );
         ReadString( soc );
-        WriteString( soc, "yep it just got Serious" );
+        WriteString( soc, "yep i" );
         checkec( ec, where );
 
         ioc.run();
