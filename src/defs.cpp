@@ -1,4 +1,3 @@
-
 #include <defs.h>
 #include <style.h>
 
@@ -17,108 +16,33 @@ using std::cout;
 using std::endl;
 using std::string;
 using namespace std::chrono;
+using std::error_code;
 
 using namespace asio;
 using asio::ip::tcp;
 using namespace std::placeholders;
 #pragma endregion
 
-void checkec( std::error_code ec1, std::string fname, int lno, std::string sw )
+void checkec( error_code ec, string file, string func, int line, string msg )
 {
-    if ( ec1.value() != 0 )
+    string errr = std::to_string( ec.value() ) + " : " + ec.message();
+    if ( ec.value() != 0 )
     {
-        print( eStyle,
-               "\nFucked up: {:^52} \nErrorcode: {:^52} \nMessage  : {:^52}",
-               sw, ec1.value(), ec1.message() );
-        print( eStyle, "\nFunction : {:^52} \nLine Num : {:^52}", fname,
-               lno - 1 );
+        print( eStyle, "\nError   :{:^52} ", errr );
+        print( eStyle, "\nFunction:{:^52} ", func );
+        print( eStyle, "\nOn Line :{:^52} ", line );
+        print( eStyle, "\nIn File :{:^52} ", file );
+        if ( msg != "" ) { print( eStyle, "\nMsg    :{:^52} ", msg ); }
         std::cout << std::endl;
         // abort();
     }
     else
     {
-        if ( sw != "" )
+        if ( msg != "" )
         {
-            print( okStyle,
-                   "\nlineNo: {} :- {:<20}:  Errorcode: {} Message: {}", lno,
-                   sw, ec1.value(), ec1.message() );
+            print( okStyle, "\nCode -> {:<} ", errr );
+            print( okStyle, "|| Msg -> {:<} ", msg );
+            std::cout << std::endl;
         }
     }
-}
-
-void WriteString( std::shared_ptr<tcp::socket> sock, string const& WriteString )
-{
-    auto datab = std::make_shared<SessionWrite>();
-
-    datab->setOutString( WriteString );
-    datab->mSoc              = sock;
-    datab->TotalBytesWritten = 0;
-
-    // datab->mSoc->async_write_some( buffer( datab->OutString ), f2 );
-    auto f2 = std::bind( WriteCallBack, _1, _2, datab );
-
-    asio::async_write( *( datab->mSoc ), buffer( datab->OutString ), f2 );
-}
-
-void WriteCallBack( error_code ec, int fTotalBytesWritten,
-                    std::shared_ptr<SessionWrite> sp )
-{
-    if ( ec.value() != 0 )
-    {
-        checkec( ec, where, "callback writesome" );
-        return;
-    }
-}
-
-void ReadString( std::shared_ptr<tcp::socket> soc )
-{
-    auto re = std::make_shared<SessionRead>();
-    re->InputString.clear();
-    re->InputString.resize( SessionRead::HEADERSIZE );
-    re->mSoc       = soc;
-    re->ReadHeader = true;
-
-    auto f1 = std::bind( ReadCallBack, _1, _2, re );
-
-    asio::async_read( *( re->mSoc ),
-                      buffer( static_cast<char*>( re->InputString.data() ),
-                              re->InputString.length() ),
-                      f1 );
-}
-void ReadCallBack( error_code ec, int byRead, std::shared_ptr<SessionRead> rs )
-{
-    // print(wStyle,"\nwaaa");
-    if ( ec.value() != 0 )
-    {
-        checkec( ec, where, "callbackread" );
-        return;
-    }
-
-    if ( rs->ReadHeader == true )
-    {
-        int totals      = stoi( rs->InputString );
-        rs->InputHeader = rs->InputString.substr( 0, SessionRead::HEADERSIZE );
-        rs->InputString.clear();
-
-        rs->InputString.resize( totals - SessionRead::HEADERSIZE );
-        rs->ReadHeader = false;
-    }
-    else
-    {
-        tcp::endpoint rep = rs->mSoc->remote_endpoint( ec );
-        checkec( ec, where );
-        print( grStyle,
-               "\nSomeOne From: {}:{} says:", rep.address().to_string(),
-               rep.port() );
-        print( yeStyle, "\n{}", rs->InputString );
-        print( yeStyle, "\nThe Header Was: {}", rs->InputHeader );
-        cout << endl;
-        return;
-    }
-    auto f1 = std::bind( ReadCallBack, _1, _2, rs );
-
-    asio::async_read( *( rs->mSoc ),
-                      buffer( static_cast<char*>( rs->InputString.data() ),
-                              rs->InputString.length() ),
-                      f1 );
 }

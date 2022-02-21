@@ -30,7 +30,7 @@ target_sources(client PRIVATE ${SOURCES})
 
 target_link_libraries(client PRIVATE fmt::fmt OpenSSL::SSL OpenSSL::Crypto  asio::asio )
 target_compile_features(client PUBLIC cxx_std_20)
-target_compile_options(client PUBLIC -Wall -fno-exceptions --std=c++20)
+target_compile_options(client PUBLIC -Wall --std=c++20)#-fno-exceptions 
 
 
 add_executable(server)
