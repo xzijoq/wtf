@@ -16,7 +16,6 @@
 #include <thread>
 
 #include "defs.h"
-#include "main.h"
 #include "style.h"
 
 #pragma region using
