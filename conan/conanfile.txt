@@ -1,17 +1,16 @@
 
 [requires]
 fmt/[>=8.0.1]
-openssl/[>=3.0.1k]
-asio/[>=1.21.0]
-
-# boost/[>=1.78.0]
+#openssl/[>=3.0.1k]
+#asio/[>=1.21.0]
+#boost/[>=1.78.0]
 
 [generators]
 cmake_find_package
 
 
 [options]
-openssl:shared=False
+#openssl:shared=False
 fmt:shared=False
 
 

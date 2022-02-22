@@ -13,7 +13,7 @@ cwd = os.getcwd()
 build_dir = 'build'
 build_dir_path = join(cwd, build_dir)
 
-target = 'client'
+target = 'main'
 target_path = join(build_dir_path, target)
 
 cmake_compiler = 'clang++'
