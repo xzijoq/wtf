@@ -1,43 +1,43 @@
 
-
-#include <assert.h>
-#include <chrono>
-#include <cstdint>
-#include <system_error>
-#include <thread>
-#include <iostream>
-
 #include "main.h"
-#include "style.h"
 
-#pragma region using
+mutex              m1;
+condition_variable cv1;
+int                i{ 0 };
 
-using namespace std::chrono;
-using namespace std;
-using fmt::print;
-#pragma endregion
+int a;
 
-void testf(int x){
-    print(liStyle,"omfg");
-    cout<<endl;
-    
+int longer()
+{
+    print( okStyle, "\nThats it im done" );
+    cout << endl;
+    this_thread::sleep_for( 2s );
+    return 128;
 }
-
 int main( int argc, char* argv[] )
 {
     print( orStyle, "\nMAIN STARTS HERE\n" );
 
+    future<int> wtf = async( longer );
 
-    jthread r1(
-        [](){
-            print(okStyle,"\nRunning from a jthread");
-            cout<<endl;
-        }
+    // auto pp = wtf.get();
+    int pp{};
+    jthread jh2(
+        [&]()
+        {
+            while ( true ) {
+                
+                 auto res=wtf.wait_for( 200ms ); 
+                 if(res==std::future_status::ready){
+                     break;
+                 }
+            
+            }
+            pp=wtf.get();
+        } );
+    jh2.join();
+    print(okStyle,"\nThis IS what i get? {},",pp);
 
-    );
-    jthread j1(testf,2);
-
- 
     print( orStyle, "\nMAIN ENDS HERE\n" );
     return 0;
 }

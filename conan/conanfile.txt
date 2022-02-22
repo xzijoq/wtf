@@ -1,6 +1,7 @@
 
 [requires]
 fmt/[>=8.0.1]
+#xxhash/[>=0.8.0]
 #openssl/[>=3.0.1k]
 #asio/[>=1.21.0]
 #boost/[>=1.78.0]

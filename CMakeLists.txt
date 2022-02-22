@@ -14,6 +14,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/conan_cmake)
 
 find_package(fmt REQUIRED)
 
+
 add_executable(main)
 target_include_directories(main PUBLIC includes )
 set(SOURCES
@@ -23,7 +24,7 @@ set(SOURCES
 
 target_sources(main PRIVATE ${SOURCES})
 
-target_link_libraries(main PRIVATE fmt::fmt)# OpenSSL::SSL OpenSSL::Crypto  asio::asio )
+target_link_libraries(main PRIVATE fmt::fmt )# OpenSSL::SSL OpenSSL::Crypto  asio::asio )
 target_compile_features(main PUBLIC cxx_std_20)
 target_compile_options(main PUBLIC  --std=c++20)#-fno-exceptions -Wall
 
