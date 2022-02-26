@@ -46,3 +46,5 @@ void checkec( error_code ec, string file, string func, int line, string msg )
         }
     }
 }
+
+
