@@ -1,32 +1,26 @@
 
 #define ASIO_NO_DEPRECATED
 
-#include <asio.hpp>
-#include <asio/error_code.hpp>
-#include <asio/io_context.hpp>
-#include <asio/ip/tcp.hpp>
-#include <asio/registered_buffer.hpp>
-#include <chrono>
-#include <cstdint>
-#include <source_location>
-#include <system_error>
-#include <thread>
-
 #include "defs.h"
-#include "style.h"
-
-#pragma region using
-using namespace std::chrono;
-using namespace asio;
-using namespace std::placeholders;
-using asio::ip::tcp;
-using fmt::print;
-using std::cout;
-using std::endl;
-using std::string;
-#pragma endregion
 
 #define ASIO_ENABLE_HANDLER_TRACKING
+
+struct omg
+{
+    int a, b;
+} omg1;
+
+void onAccept( error_code ec, tcp::socket sock, Session* s1 )
+{
+    if ( ec.value() != 0 ) { checkec( ec, where ); }
+
+    s1->sock = move( sock );
+    s1->fwstr();
+    s1->frstr();
+   // std::thread t1(&Session::frstr,&s1)  ;
+}
+
+void wtd( int a, int b, string c ) {}
 
 int main()
 {
@@ -59,49 +53,24 @@ int main()
     checkec( ec, where );
 
     //! temp accept into socket
-    tcp::socket asoc( ioc );
+    //! new ioc
+    io_context  cioc;
+    tcp::socket c1( cioc );
+    tcp::socket asoc( cioc );
+    Session     s1{ move( c1 ) };
 
     //! buffers
-    string writeStr = "fuck";
-    string readStr  = "    ";
 
-    tcp::socket tsoc( ioc );
+    //! Go
 
     acp.listen( BackLog, ec );
     checkec( ec, where );
 
-    acp.async_accept( asoc,
-                      [&writeStr, &readStr, &asoc]( error_code ec )
-                      {
-                          if ( ec.value() != 0 ) { checkec( ec, where ); }
+    auto f1 = bind( onAccept, _1, _2, &s1 );
 
-                          auto rep = asoc.remote_endpoint( ec );
-                          checkec( ec, where );
-
-                          print( okStyle, "\nRep.addr:{} , Rep.Port:{}",
-                                 rep.address().to_string(), rep.port() );
-
-                          async_write( asoc, buffer( writeStr ),
-                                       []( error_code ec, int byr )
-                                       {
-                                           if ( ec.value() != 0 )
-                                           {
-                                               checkec( ec, where );
-                                           }
-                                       } );
-
-                          async_read( asoc, buffer( readStr ),
-                                      [&readStr]( error_code ec, int byr )
-                                      {
-                                          if ( ec.value() != 0 )
-                                          {
-                                              checkec( ec, where );
-                                          }
-                                          print( orStyle, "\n{}", readStr );
-                                      } );
-                      } );
-
+    acp.async_accept( cioc, f1 );
     ioc.run();
+    cioc.run();
 
     print( liStyle, "\nSERVER ENDS HERE\n" );
     return 0;

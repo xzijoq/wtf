@@ -47,4 +47,43 @@ void checkec( error_code ec, string file, string func, int line, string msg )
     }
 }
 
+void Session::fwstr()
+{
+    //    sock.write_some(buffer(wStr));
 
+    async_write( sock, buffer( wStr ),
+                 [this]( error_code ec, int len )
+                 {
+                     if ( ec.value() != 0 ) { checkec( ec, where ); }
+                     // string sr;
+                     // getline( cin, sr );
+                     // wStr = sr;
+                     // fwstr();
+                 }
+
+    );
+}
+void Session::frstr()
+{
+    async_read( sock, buffer( rStr ),
+                [this]( error_code ec, int len )
+                {
+                    if ( ec.value() != 0 )
+                    {
+                        checkec( ec, where );
+                        return;
+                    }
+                    print( okStyle, "\nclient: {}", rStr );
+                    cout << endl;
+                    frstr();
+                } );
+}
+void Session ::start()
+{
+    error_code( ec );
+    auto rep = sock.remote_endpoint( ec );
+    if ( ec.value() != 0 ) { return; }
+
+    fwstr();
+    frstr();
+}
