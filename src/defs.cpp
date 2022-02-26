@@ -1,27 +1,6 @@
 #include <defs.h>
-#include <style.h>
 
-#include <asio.hpp>
-#include <asio/error.hpp>
-#include <asio/error_code.hpp>
-#include <asio/io_context.hpp>
-#include <asio/ip/address.hpp>
-#include <asio/ip/address_v4.hpp>
-#include <asio/ip/address_v6.hpp>
-#include <asio/ip/basic_endpoint.hpp>
 
-#pragma region using
-using fmt::print;
-using std::cout;
-using std::endl;
-using std::string;
-using namespace std::chrono;
-using std::error_code;
-
-using namespace asio;
-using asio::ip::tcp;
-using namespace std::placeholders;
-#pragma endregion
 
 void checkec( error_code ec, string file, string func, int line, string msg )
 {
@@ -46,44 +25,58 @@ void checkec( error_code ec, string file, string func, int line, string msg )
         }
     }
 }
-
-void Session::fwstr()
+void Session::Start()
 {
-    //    sock.write_some(buffer(wStr));
+    async_read_until( mSock, mSbuf, '\n',
+                      [inc = shared_from_this(), this]( error_code ec, int len )
+                      {
+                          //! Only need to increment the shared pointer no need to use it
+                          if ( ec.value() != 0 )
+                          {
+                              checkec( ec, where );
+                              // self->mSock.close();
+                              mSock.close();
+                              return;
+                          }
+                          string s1;  //=
+                          // cout<<std::istream( &self->mSbuf).rdbuf();
 
-    async_write( sock, buffer( wStr ),
-                 [this]( error_code ec, int len )
-                 {
-                     if ( ec.value() != 0 ) { checkec( ec, where ); }
-                     // string sr;
-                     // getline( cin, sr );
-                     // wStr = sr;
-                     // fwstr();
-                 }
+                          std::getline( std::istream( &mSbuf ), s1 );
+                          auto rep = mSock.remote_endpoint();
+                          // auto wow=self1.use_count();
+                          cout << std::endl;
+                          print( okStyle, " {}:{} :- {} ",
+                                 rep.address().to_string(), rep.port(), s1 );
+                          cout << std::endl;
 
-    );
+                          if ( s1.starts_with( "quit" ) )
+                          {
+                              print( wStyle, "\nclosing {}:{}",
+                                     rep.address().to_string(), rep.port() );
+                              cout << std::endl;
+                              mSock.close();
+                              return;
+                          }
+
+                          Start();
+                      } );
 }
-void Session::frstr()
+void Server::fAacp()
 {
-    async_read( sock, buffer( rStr ),
-                [this]( error_code ec, int len )
-                {
-                    if ( ec.value() != 0 )
-                    {
-                        checkec( ec, where );
-                        return;
-                    }
-                    print( okStyle, "\nclient: {}", rStr );
-                    cout << endl;
-                    frstr();
-                } );
-}
-void Session ::start()
-{
-    error_code( ec );
-    auto rep = sock.remote_endpoint( ec );
-    if ( ec.value() != 0 ) { return; }
+    print( orStyle, "\nListening" );
+    cout << endl;
+    mAcp.listen( 12 );
 
-    fwstr();
-    frstr();
+    mAcp.async_accept(
+        [this]( error_code ec, tcp::socket soc )
+        {
+            auto rep = soc.remote_endpoint();
+            print( orStyle, "\nAccpeted:" );
+            print( orStyle, "{}:{}  ", rep.address().to_string(), rep.port() );
+            cout << endl;
+            auto s1 = std::make_shared<Session>( move( soc ) );
+            // cout << std::endl << "asdasd: " << s1.use_count();
+            s1->Start();
+            fAacp();
+        } );
 }
