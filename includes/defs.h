@@ -49,7 +49,7 @@ using std::string;
 using asio::async_read;
 using asio::async_read_until;
 using asio::async_write;
-
+using asio::buffer;
 using asio::io_context;
 using asio::ip::tcp;
 
@@ -58,6 +58,8 @@ using asio::ip::tcp;
 void checkec( error_code ec1, string file = "", string func = "", int line = -1,
               string msg = "" );
 
+void ShowSock( tcp::socket const& sock );
+/*
 class Session : public enable_shared_from_this<Session>
 {
    public:
@@ -69,7 +71,9 @@ class Session : public enable_shared_from_this<Session>
 
     void Start();
 };
+*/
 
+/*
 class Server : public enable_shared_from_this<Server>
 {
    public:
@@ -93,4 +97,5 @@ class Server : public enable_shared_from_this<Server>
         checkec( ec, where );
     }
     void fAacp();
-};
+};*/
+
