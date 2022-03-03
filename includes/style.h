@@ -17,3 +17,14 @@ extern fmt::text_style yeStyle;
 extern fmt::text_style fwStyle;
 extern fmt::text_style bvStyle;
 extern void printallstyle();
+
+
+//!wow
+//@ano
+//#asdf
+//$omg
+//%nopo
+//^crra
+//&io
+//* asdf
+//(asd
